@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silly Games Collection</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f5ff;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            text-align: center;
+            color: #5d68c9;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .intro {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .games-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .game-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .game-preview {
+            height: 150px;
+            background-color: #dce4ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+
+        .simon-preview {
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+            height: 100%;
+        }
+
+        .simon-preview div {
+            width: 50%;
+            height: 50%;
+        }
+
+        .simon-green { background-color: rgba(0, 128, 0, 0.7); }
+        .simon-red { background-color: rgba(255, 0, 0, 0.7); }
+        .simon-yellow { background-color: rgba(255, 255, 0, 0.7); }
+        .simon-blue { background-color: rgba(0, 0, 255, 0.7); }
+
+        .game-info {
+            padding: 15px;
+        }
+
+        .game-title {
+            font-weight: bold;
+            margin: 0;
+            color: #5d68c9;
+            font-size: 1.2rem;
+        }
+
+        .game-desc {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Pixel Playground 🎮</h1>
+    
+    <div class="intro">
+        <p>Whoosh! You've tumbled into a wonderland of byte-sized joy machines!</p>
+   </div>
+    
+    <div class="games-container">
+        <a href="simon.html">
+            <div class="game-card">
+                <div class="game-preview">
+                    <div class="simon-preview">
+                        <div class="simon-green"></div>
+                        <div class="simon-red"></div>
+                        <div class="simon-yellow"></div>
+                        <div class="simon-blue"></div>
+                    </div>
+                </div>
+                <div class="game-info">
+                    <h3 class="game-title">Simon Says</h3>
+                    <p class="game-desc">Follow the blinking lights or face the music! A memory tango with four colorful partners.</p>
+                </div>
+            </div>
+        </a>
+        
+        <!-- Placeholder for future games -->
+        <div class="game-card">
+            <div class="game-preview">🚧</div>
+            <div class="game-info">
+                <h3 class="game-title">Mystery Box</h3>
+                <p class="game-desc">Shhh! Code elves are tinkering away at this one. Peeking not allowed!</p>
+            </div>
+        </div>
+        
+        <div class="game-card">
+            <div class="game-preview">🚧</div>
+            <div class="game-info">
+                <h3 class="game-title">Top Secret Fun</h3>
+                <p class="game-desc">This game is still swimming in the digital soup of creation. Stay tuned!</p>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Cobbled together with ❤️ and a sprinkle of keyboard magic by Jonathan Goren - 2023</p>
+    </footer>
+</body>
+</html>

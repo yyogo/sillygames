@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simon Says</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #333;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        
+        .game-pad {
+            width: 140px;
+            height: 140px;
+            position: absolute;
+            border: 3px solid #333;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: filter 0.1s, background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .key-label {
+            font-size: 24px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.7);
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+        }
+        
+        .game-pad.active {
+            filter: brightness(1.5);
+        }
+        
+        #green {
+            background-color: rgba(0, 128, 0, 0.5);
+            border-top-left-radius: 100%;
+            top: 0;
+            left: 0;
+        }
+        
+        #green.active {
+            background-color: rgba(0, 128, 0, 1);
+        }
+        
+        #red {
+            background-color: rgba(255, 0, 0, 0.5);
+            border-top-right-radius: 100%;
+            top: 0;
+            right: 0;
+        }
+        
+        #red.active {
+            background-color: rgba(255, 0, 0, 1);
+        }
+        
+        #yellow {
+            background-color: rgba(255, 255, 0, 0.5);
+            border-bottom-left-radius: 100%;
+            bottom: 0;
+            left: 0;
+        }
+        
+        #yellow.active {
+            background-color: rgba(255, 255, 0, 1);
+        }
+        
+        #blue {
+            background-color: rgba(0, 0, 255, 0.5);
+            border-bottom-right-radius: 100%;
+            bottom: 0;
+            right: 0;
+        }
+        
+        #blue.active {
+            background-color: rgba(0, 0, 255, 1);
+        }
+        
+        .center-circle {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-color: #333;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        button:disabled {
+            background-color: #00000000;
+        }
+
+        button:disabled:hover {
+            background-color: #413d3d;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            background-color: #6fc574;
+        }
+        
+        .score {
+            margin-top: 10px;
+            font-size: 18px;
+        }
+        
+        .key-info {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+   
+    <div class="game-container">
+        <div class="game-pad" id="green" data-key="q"><span class="key-label">Q</span></div>
+        <div class="game-pad" id="red" data-key="w"><span class="key-label">W</span></div>
+        <div class="game-pad" id="yellow" data-key="a"><span class="key-label">A</span></div>
+        <div class="game-pad" id="blue" data-key="s"><span class="key-label">S</span></div>
+        <div class="center-circle">
+            <div id="level">1</div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button id="start-btn">Start</button>
+    </div>
+    
+    <div class="high-score">
+        <p>High score: <span id="high-score">0</span></p>
+    </div>
+
+    <script>
+        // Audio Context
+        let audioContext;
+        const tones = {
+            green: 261.63,  // C4
+            red: 329.63,    // E4
+            yellow: 392.00, // G4
+            blue: 523.25    // C5
+        };
+        
+        // Game Variables
+        let sequence = [];
+        let playerSequence = [];
+        let level = 1;
+        let isPlaying = false;
+        let canPlayerInput = false;
+        let highScore = 0;
+        
+        // DOM Elements
+        const pads = document.querySelectorAll('.game-pad');
+        const startButton = document.getElementById('start-btn');
+        const levelElement = document.getElementById('level');
+        
+        // Initialize Audio Context on first user interaction
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        // Load high score from localStorage on page load
+        function loadHighScore() {
+            const storedHighScore = localStorage.getItem('simonHighScore');
+            if (storedHighScore) {
+                highScore = parseInt(storedHighScore);
+                document.getElementById('high-score').textContent = highScore;
+            }
+        }
+        
+        // Play tone for a specific pad
+        function playTone(padId, duration = 500) {
+            if (!audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            // Use square wave for more synth-like sound
+            oscillator.type = 'sine';
+            oscillator.frequency.value = tones[padId];
+            
+            // ADSR envelope settings
+            const now = audioContext.currentTime;
+            const attack = 0.05;  // 50ms attack
+            const decay = 0.1;    // 100ms decay
+            const sustain = 0.3;  // 30% of full volume
+            const release = 0.3;  // 300ms release
+            
+            // Set initial gain to 0
+            gainNode.gain.setValueAtTime(0.001, now);
+            
+            // Attack - ramp up to full volume
+            gainNode.gain.linearRampToValueAtTime(0.5, now + attack);
+            
+            // Decay - ramp down to sustain level
+            gainNode.gain.linearRampToValueAtTime(sustain, now + attack + decay);
+            
+            // Sustain happens automatically by staying at that level
+            
+            // Release - ramp down to zero
+            gainNode.gain.linearRampToValueAtTime(0, now + decay + (duration / 1000));
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.start();
+            oscillator.stop(now + decay + duration/1000);  
+            oscillator.onended = () => {
+                gainNode.disconnect();
+                oscillator.disconnect();
+            };          
+        }
+        
+        // Light up a pad
+        function lightPad(pad, duration = 400) {
+            pad.classList.add('active');
+            playTone(pad.id, duration);
+            
+            setTimeout(() => {
+                pad.classList.remove('active');
+            }, duration);
+        }
+        
+        // Play the current sequence
+        async function playSequence() {
+            startButton.textContent = 'Listen...';
+            canPlayerInput = false;
+            
+            highScore = Math.max(level - 1, highScore);
+            document.getElementById('high-score').textContent = highScore;
+            localStorage.setItem('simonHighScore', highScore.toString());
+
+            for (let i = 0; i < sequence.length; i++) {
+                await new Promise(resolve => {
+                    setTimeout(() => {
+                        const pad = document.getElementById(sequence[i]);
+                        lightPad(pad);
+                        resolve();
+                    }, 700);
+                });
+            }
+            
+            setTimeout(() => {
+                canPlayerInput = true;
+                startButton.textContent = 'Your Turn';
+            }, 500);
+        }
+        
+        // Generate next sequence
+        function nextSequence() {
+            const colors = ['green', 'red', 'yellow', 'blue'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            sequence.push(randomColor);
+            
+            level++;
+            levelElement.textContent = `${level}`;
+            
+            setTimeout(() => {
+                playSequence();
+            }, 1000);
+        }
+        
+        // Check player input
+        function checkInput(index) {
+            if (playerSequence[index] === sequence[index]) {
+                if (playerSequence.length === sequence.length) {
+                    startButton.textContent = 'Good Job!';
+                    canPlayerInput = false;
+                    playerSequence = [];
+                    nextSequence();
+                }
+            } else {
+                gameOver();
+            }
+        }
+        
+        // Game over
+        function gameOver() {
+            isPlaying = false;
+            highScore = Math.max(level - 1, highScore);
+            startButton.textContent = 'Game Over! Try Again!';
+            localStorage.setItem('simonHighScore', highScore.toString());
+            // play the correct note
+            
+            setTimeout(() => {
+                const correctNote = sequence[playerSequence.length - 1];
+                const pad = document.getElementById(correctNote);
+                lightPad(pad);
+
+                sequence = [];
+                playerSequence = [];
+                startButton.disabled = false;
+            }, 800);
+        }
+        
+        // Start the game
+        function startGame() {
+            initAudio();
+            
+            sequence = [];
+            playerSequence = [];
+            level = 1;
+            isPlaying = true;
+            
+            levelElement.textContent = `${level}`;
+            startButton.textContent = 'Listen...';
+            startButton.disabled = true;
+            
+            // Generate first color in sequence
+            const colors = ['green', 'red', 'yellow', 'blue'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            sequence.push(randomColor);
+            
+            setTimeout(() => {
+                playSequence();
+            }, 1000);
+        }
+        
+        // Event Listeners
+        startButton.addEventListener('click', () => {
+            if (!isPlaying) {
+                startGame();
+            }
+        });
+        
+        // Pad click events
+        pads.forEach(pad => {
+            pad.addEventListener('click', () => {
+                if (isPlaying && canPlayerInput) {
+                    lightPad(pad);
+                    
+                    if (canPlayerInput) {
+                        playerSequence.push(pad.id);
+                        checkInput(playerSequence.length - 1);
+                    }
+                }
+            });
+        });
+        
+        // Keyboard events
+        document.addEventListener('keydown', (event) => {
+            if (!isPlaying && !startButton.disabled && event.key.toLowerCase() === 'enter') {
+                startGame();
+                return;
+            }
+            if (isPlaying && canPlayerInput) {
+                let padId = null;
+                
+                switch(event.key.toLowerCase()) {
+                    case 'q':
+                        padId = 'green';
+                        break;
+                    case 'w':
+                        padId = 'red';
+                        break;
+                    case 'a':
+                        padId = 'yellow';
+                        break;
+                    case 's':
+                        padId = 'blue';
+                        break;
+                }
+                
+                if (padId) {
+                    const pad = document.getElementById(padId);
+                    lightPad(pad);
+                    
+                    playerSequence.push(padId);
+                    checkInput(playerSequence.length - 1);
+                }
+            }
+        });
+        
+        // Load high score when the page loads
+        loadHighScore();
+    </script>
+</body>
+</html>
