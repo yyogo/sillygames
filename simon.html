@@ -421,25 +421,6 @@
             }
         });
         
-        // Add touch events for mobile
-        document.addEventListener('DOMContentLoaded', function() {
-            // Prevent scrolling on touch devices
-            document.addEventListener('touchmove', function(event) {
-                event.preventDefault();
-            }, { passive: false });
-            
-            // Prevent double tap zoom
-            let lastTap = 0;
-            document.addEventListener('touchend', function(event) {
-                const currentTime = new Date().getTime();
-                const tapLength = currentTime - lastTap;
-                if (tapLength < 500 && tapLength > 0) {
-                    event.preventDefault();
-                }
-                lastTap = currentTime;
-            });
-        });
-        
         // Load high score when the page loads
         loadHighScore();
     </script>
