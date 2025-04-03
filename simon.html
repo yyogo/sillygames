@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Simon Says</title>
     <style>
         body {
@@ -146,6 +146,12 @@
             margin-top: 20px;
             text-align: center;
         }
+
+        @media (max-width: 768px) {
+            .key-label {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -210,6 +216,7 @@
         // Play tone for a specific pad
         function playTone(padId, duration = 500) {
             if (!audioContext) return;
+            navigator.vibrate([100])
             
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
@@ -254,6 +261,11 @@
         function lightPad(pad, duration = 400) {
             pad.classList.add('active');
             playTone(pad.id, duration);
+            
+            // Add vibration for mobile devices
+            if (window.navigator && window.navigator.vibrate) {
+                navigator.vibrate(100);
+            }
             
             setTimeout(() => {
                 pad.classList.remove('active');
@@ -408,6 +420,25 @@
                     checkInput(playerSequence.length - 1);
                 }
             }
+        });
+        
+        // Add touch events for mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prevent scrolling on touch devices
+            document.addEventListener('touchmove', function(event) {
+                event.preventDefault();
+            }, { passive: false });
+            
+            // Prevent double tap zoom
+            let lastTap = 0;
+            document.addEventListener('touchend', function(event) {
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTap;
+                if (tapLength < 500 && tapLength > 0) {
+                    event.preventDefault();
+                }
+                lastTap = currentTime;
+            });
         });
         
         // Load high score when the page loads
