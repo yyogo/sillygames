@@ -216,7 +216,6 @@
         // Play tone for a specific pad
         function playTone(padId, duration = 500) {
             if (!audioContext) return;
-            navigator.vibrate([100])
             
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
@@ -264,7 +263,7 @@
             
             // Add vibration for mobile devices
             if (window.navigator && window.navigator.vibrate) {
-                navigator.vibrate(100);
+                window.navigator.vibrate(100);
             }
             
             setTimeout(() => {
